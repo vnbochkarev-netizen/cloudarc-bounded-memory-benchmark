@@ -8,6 +8,12 @@ Use it when changing benchmarks, SLOs, manifest/index cardinality, remote metada
 reads, GitHub Actions checks, or when reviewing a large-package MVP before cloud
 provider integration.
 
+> **Honest status:** the limits below are the **CloudArc SLO contract** (documented
+> target values), not measurements produced by this package on this machine.
+> Reproduce real numbers by running `smoke` / `manual` inside a CloudArc checkout
+> (`benchmarks/large_package.py` must be present). Until then, treat the table as
+> the contract the workflow enforces, not as a measured result.
+
 ## What it protects
 
 | Limit | Value |
