@@ -1,15 +1,23 @@
 ---
 name: cloudarc-bounded-memory-benchmark
-description: Repeatable CloudArc workflow for validating bounded-memory streaming pack/unpack, high-cardinality multi-file .vibo packages, deduplication, remote-search range telemetry, and CI/manual benchmark gates. Use when changing benchmarks, SLOs, manifest/index cardinality, remote metadata reads, GitHub Actions checks, or when reviewing a large-package MVP before cloud-provider integration.
+version: 1.1.1
+metadata:
+  version: 1.1.1
+  hermes:
+    tags: [cloudarc, benchmark, memory, ci, vibo]
+tools: [python]
+description: Make CloudArc large-package performance work reproducible, measurable, and safe to ship. Drives the bounded-memory benchmark workflow for the .vibo container - streaming pack/unpack inside a fixed RSS ceiling, high-cardinality multi-file archives with deduplication, remote-search range telemetry, and the CI/manual gates that guard them. Use when changing benchmarks, SLOs, manifest or index cardinality, remote metadata reads, or GitHub Actions checks - or when reviewing a large-package MVP before real cloud providers are switched on. Ships three safe helper entry points (smoke, manual, check-telemetry), enforces the published SLO boundaries, and fails closed on incomplete or inconsistent artifacts.
 ---
 
 # CloudArc Bounded-Memory Benchmark
 
-**Release:** `1.1.0` (2026-09-10)
+**Release:** `1.1.1` (2026-09-10)
 
 Use this skill to make large-package performance work reproducible, measurable,
 and safe to run before real cloud providers are enabled. Keep the portable
 reference backend authoritative; native ViBo semantic support remains optional.
+
+> main: run `python3 scripts/cloudarc_benchmark.py`
 
 ## Workflow
 
