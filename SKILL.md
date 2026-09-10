@@ -1,17 +1,17 @@
 ---
 name: cloudarc-bounded-memory-benchmark
-version: 1.1.1
+version: 1.2.0
 metadata:
-  version: 1.1.1
+  version: 1.2.0
   hermes:
     tags: [cloudarc, benchmark, memory, ci, vibo]
 tools: [python]
-description: Make CloudArc large-package performance work reproducible, measurable, and safe to ship. Drives the bounded-memory benchmark workflow for the .vibo container - streaming pack/unpack inside a fixed RSS ceiling, high-cardinality multi-file archives with deduplication, remote-search range telemetry, and the CI/manual gates that guard them. Use when changing benchmarks, SLOs, manifest or index cardinality, remote metadata reads, or GitHub Actions checks - or when reviewing a large-package MVP before real cloud providers are switched on. Ships three safe helper entry points (smoke, manual, check-telemetry), enforces the published SLO boundaries, and fails closed on incomplete or inconsistent artifacts.
+description: Make CloudArc large-package performance work reproducible, measurable, and safe to ship. Drives the bounded-memory benchmark workflow for the .vibo container - streaming pack/unpack inside a fixed RSS ceiling, high-cardinality multi-file archives with deduplication, remote-search range telemetry, and the CI/manual gates that guard them. Use when changing benchmarks, SLOs, manifest or index cardinality, remote metadata reads, or GitHub Actions checks - or when reviewing a large-package MVP before real cloud providers are switched on. Ships five safe helper entry points (doctor, selfcheck, smoke, manual, check-telemetry) plus an SLO badge renderer, enforces the published SLO boundaries, and fails closed on incomplete or inconsistent artifacts.
 ---
 
 # CloudArc Bounded-Memory Benchmark
 
-**Release:** `1.1.1` (2026-09-10)
+**Release:** `1.2.0` (2026-09-10)
 
 Use this skill to make large-package performance work reproducible, measurable,
 and safe to run before real cloud providers are enabled. Keep the portable
@@ -148,6 +148,18 @@ The bundled helper provides the same safe entry points without shell-specific
 glue:
 
 ```powershell
+# 1. Is this machine able to run anything? (works without the repository)
+python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py `
+  doctor
+
+# 2. Smallest proof: 2 MiB pack/unpack with real numbers
+python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py `
+  selfcheck --repo . --size-mib 2
+
+# 3. SLO badge for a README, straight from a result artifact
+python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py `
+  badge --input benchmarks/results/ci-smoke.json --output docs/cloudarc-slo-badge.svg
+
 python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py `
   smoke --repo .
 python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py `
@@ -155,6 +167,12 @@ python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py
 python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py `
   check-telemetry --input remote-response.json --expected range
 ```
+
+`doctor` reports the interpreter, the optional `zstandard` state, `/proc` VmRSS
+availability and whether the repository modules are present, and exits non-zero
+when the benchmark cannot run. `selfcheck` fails closed with that same report
+when the repository is missing, so a reader who only cloned this skill gets an
+explanation instead of a bare import error.
 
 `manual` requires `--yes` because it can consume hours and tens of GiB of
 temporary disk. `check-telemetry` accepts a response object containing

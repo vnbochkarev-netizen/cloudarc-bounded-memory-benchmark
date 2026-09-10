@@ -8,6 +8,11 @@ Use it when changing benchmarks, SLOs, manifest/index cardinality, remote metada
 reads, GitHub Actions checks, or when reviewing a large-package MVP before cloud
 provider integration.
 
+**Five entry points:** `doctor` (environment + repository readiness, no checkout
+required), `selfcheck` (2 MiB pack/unpack with real RSS - the fastest proof),
+`badge` (flat SVG SLO badge from a result artifact), `smoke` (tests + small
+profiles), `manual` (1/5/10 GiB behind `--yes`).
+
 > **Honest status:** the limits below are the **CloudArc SLO contract** (documented
 > target values), not measurements produced by this package on this machine.
 > Reproduce real numbers by running `smoke` / `manual` inside a CloudArc checkout
