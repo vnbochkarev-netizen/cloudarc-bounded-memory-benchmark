@@ -1,35 +1,27 @@
-# CloudArc Bounded-Memory Benchmark 1.2.0
+# CloudArc Bounded-Memory Benchmark 1.2.1
 
-**Release date:** 2026-09-10
+**Release date:** 2026-09-11
 
-## Highlights
+## Highlights (1.2.1)
 
-- `doctor`: reports interpreter, optional `zstandard` state, `/proc` VmRSS
-  availability and repository readiness, with a non-zero exit when the benchmark
-  cannot run. No CloudArc checkout required.
-- `selfcheck`: 2 MiB pack/unpack with real wall times, peak RSS and SLO verdict;
-  fails closed with the doctor report when the repository is absent.
-- `badge`: renders a flat shields-style SVG SLO badge from a benchmark JSON
-  artifact, so a README can carry the state (peak RSS vs limit).
-- Fixed a real environment-dependent defect: the suite asserted `codec=="deflate"`
-  unconditionally while the packer prefers `zstandard` when installed, so it was
-  50/51 with zstandard and 51/51 without. The deflate case now patches zstandard
-  out and a zstd case covers the same bounded-chunk guarantee; CI runs a
-  `zstandard` without/with matrix.
-- `tests/check_suite.py`: inventory guard so a test module that disappears cannot
-  silently shrink the suite.
+- Dogfooding a 556-file heterogeneous tree exposed three defects, all fixed in the
+  product: paths containing a `bin`/`var`/`etc` component were rejected anywhere
+  (any Node or Python CLI project lost its `bin/` directory); skipped files were
+  never reported (556 files in, 356 out, no signal); one symlink inside a
+  directory aborted the whole walk.
+- `pack --no-index` added: 169 MiB -> 29.7 MiB peak RSS on the same 64.1 MiB text
+  tree, archive and restore unchanged, `search.index_built = false`.
+- `pack`/`analyze` return `skipped`, `skipped_count`, `skipped_by_reason`; the CLI
+  warns on stderr about files that did not enter the archive.
+- README and `docs/LARGE_PACKAGE_SLO.md` now carry the measured heterogeneous-tree
+  RSS numbers next to the streaming 256 MiB SLO.
+- Product test suite: 59 -> 71 tests (`tests/test_safety_and_skips.py`),
+  `tests/check_suite.py` inventory guard OK, helper smoke PASS.
 
-## Verification
+## Highlights (1.2.0)
 
-- 59 tests OK on Python 3.12 with zstandard 0.25; 59 OK (1 skipped) on 3.11
-  without it.
-- `selfcheck --size-mib 2`: pack 1.26 s / 26.2 MiB, unpack 1.15 s / 26.8 MiB,
-  SLO PASS (limit 256 MiB).
-- CloudArc CI green on both matrix legs.
-
-## Upgrade note
-
-Replace older copies of `cloudarc-bounded-memory-benchmark` with this package.
+- Helper `doctor`, `selfcheck` and `badge` commands; `[zstd]`/`[semantic]` extras;
+  lazy `zstandard` import.
 
 # CloudArc Bounded-Memory Benchmark 1.1.0
 

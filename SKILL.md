@@ -1,23 +1,15 @@
 ---
 name: cloudarc-bounded-memory-benchmark
-version: 1.2.0
-metadata:
-  version: 1.2.0
-  hermes:
-    tags: [cloudarc, benchmark, memory, ci, vibo]
-tools: [python]
-description: Make CloudArc large-package performance work reproducible, measurable, and safe to ship. Drives the bounded-memory benchmark workflow for the .vibo container - streaming pack/unpack inside a fixed RSS ceiling, high-cardinality multi-file archives with deduplication, remote-search range telemetry, and the CI/manual gates that guard them. Use when changing benchmarks, SLOs, manifest or index cardinality, remote metadata reads, or GitHub Actions checks - or when reviewing a large-package MVP before real cloud providers are switched on. Ships five safe helper entry points (doctor, selfcheck, smoke, manual, check-telemetry) plus an SLO badge renderer, enforces the published SLO boundaries, and fails closed on incomplete or inconsistent artifacts.
+description: Repeatable CloudArc workflow for validating bounded-memory streaming pack/unpack, high-cardinality multi-file .vibo packages, deduplication, remote-search range telemetry, and CI/manual benchmark gates. Use when changing benchmarks, SLOs, manifest/index cardinality, remote metadata reads, GitHub Actions checks, or when reviewing a large-package MVP before cloud-provider integration.
 ---
 
 # CloudArc Bounded-Memory Benchmark
 
-**Release:** `1.2.0` (2026-09-10)
+**Release:** `1.1.0` (2026-09-10)
 
 Use this skill to make large-package performance work reproducible, measurable,
 and safe to run before real cloud providers are enabled. Keep the portable
 reference backend authoritative; native ViBo semantic support remains optional.
-
-> main: run `python3 scripts/cloudarc_benchmark.py`
 
 ## Workflow
 
@@ -42,6 +34,9 @@ operation. Keep these limits unchanged unless the user explicitly approves a
 new contract:
 
 - peak RSS: `<= 256 MiB` for pack and unpack;
+  (streaming payloads only - the lexical index is built in memory, so a text-heavy
+  tree is measured differently: 64.1 MiB / 358 files = 169 MiB with the index and
+  29.7 MiB with `pack --no-index`. Report both when a tree is text-heavy.);
 - 1/5/10 GiB peak-RSS spread: `<= 64 MiB`;
 - pack staging: `<= 2.10 * payload + 64 MiB`;
 - unpack staging: `<= 1.10 * payload + 64 MiB`.
@@ -148,18 +143,6 @@ The bundled helper provides the same safe entry points without shell-specific
 glue:
 
 ```powershell
-# 1. Is this machine able to run anything? (works without the repository)
-python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py `
-  doctor
-
-# 2. Smallest proof: 2 MiB pack/unpack with real numbers
-python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py `
-  selfcheck --repo . --size-mib 2
-
-# 3. SLO badge for a README, straight from a result artifact
-python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py `
-  badge --input benchmarks/results/ci-smoke.json --output docs/cloudarc-slo-badge.svg
-
 python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py `
   smoke --repo .
 python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py `
@@ -167,12 +150,6 @@ python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py
 python -B skills/cloudarc-bounded-memory-benchmark/scripts/cloudarc_benchmark.py `
   check-telemetry --input remote-response.json --expected range
 ```
-
-`doctor` reports the interpreter, the optional `zstandard` state, `/proc` VmRSS
-availability and whether the repository modules are present, and exits non-zero
-when the benchmark cannot run. `selfcheck` fails closed with that same report
-when the repository is missing, so a reader who only cloned this skill gets an
-explanation instead of a bare import error.
 
 `manual` requires `--yes` because it can consume hours and tens of GiB of
 temporary disk. `check-telemetry` accepts a response object containing
@@ -221,3 +198,15 @@ Read [references/contract.md](references/contract.md) when implementing or
 reviewing the detailed SLO, telemetry, resume, and CI contracts. Read
 [references/release-notes.md](references/release-notes.md) when handing the
 skill to another team or upgrading from an earlier package.
+
+## Skipped files and the index flag (1.2.1)
+
+`pack`/`analyze` now return `skipped`, `skipped_count` and `skipped_by_reason`
+(`protected` / `system` / `symlink`) and the CLI warns on stderr. Never treat a
+pack as complete without checking that count: protected subtrees (`.git`,
+`__pycache__`, `.venv`) and symlinks inside a directory are skipped by design.
+
+`pack --no-index` (also on `push`) skips lexical index construction for
+memory-bounded runs on text-heavy trees; the manifest records
+`search.index_built = false` and `search` returns nothing. The archive payload
+and restore path are unchanged.
